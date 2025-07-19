@@ -23,17 +23,9 @@ const AssociateDoctorForm = () => {
   }, []);
 
   useEffect(() => {
-    if (hospitalId) {
-      setDepartments(getDepartmentsByHospital(hospitalId));
-      const filtered = doctors.filter((doc) =>
-        doc.associations && doc.associations.some((assoc) => assoc.hospitalId === hospitalId)
-      );
-      console.log('Filtered doctors for hospital', hospitalId, ':', filtered);
-      setFilteredDoctors(filtered);
-    } else {
-      setDepartments([]);
-      setFilteredDoctors(doctors);
-    }
+    setDepartments(hospitalId ? getDepartmentsByHospital(hospitalId) : []);
+    // Temporarily disable filtering to show all doctors regardless of hospital selection
+    setFilteredDoctors(doctors);
   }, [hospitalId, doctors]);
 
   const handleAddAvailability = () => {
@@ -79,6 +71,9 @@ const AssociateDoctorForm = () => {
     setAvailability([]);
     setConsultationFee('');
   };
+
+  console.log('Doctors state:', doctors);
+  console.log('FilteredDoctors state:', filteredDoctors);
 
   return (
     <div>

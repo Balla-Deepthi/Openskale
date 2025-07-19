@@ -11,6 +11,7 @@ import {
   getPatientsFromStorage,
   saveAppointmentToStorage,
   getAppointmentsFromStorage,
+  saveToStorage,
 } from './localStorageUtils';
 
 // Utility to generate unique IDs
@@ -24,7 +25,7 @@ export const addHospital = (hospital) => {
   const hospitals = getHospitalsFromStorage();
   hospital.id = generateId();
   hospitals.push(hospital);
-  saveHospitalToStorage(hospital);
+  saveHospitalToStorage(hospitals);
   return hospital;
 };
 
@@ -81,7 +82,8 @@ export const addPatient = (patient) => {
   const patients = getPatientsFromStorage();
   patient.id = generateId();
   patients.push(patient);
-  savePatientToStorage(patients);
+  // Fix: save updated patients array directly to storage
+  saveToStorage('patients', patients);
   return patient;
 };
 
@@ -113,7 +115,13 @@ export const getAppointmentsByDoctor = (doctorId) => {
 
 export const getAppointmentsByPatient = (patientId) => {
   const appointments = getAppointmentsFromStorage();
-  return appointments.filter((appt) => appt.patientId === patientId);
+  const normalizedId = String(patientId).trim().toLowerCase();
+  console.log('Filtering appointments for patientId:', normalizedId);
+  return appointments.filter((appt) => {
+    const apptId = String(appt.patientId).trim().toLowerCase();
+    console.log('Comparing appointment patientId:', apptId);
+    return apptId === normalizedId;
+  });
 };
 
 // -------------------------
@@ -134,10 +142,6 @@ export const isTimeSlotAvailable = (doctorId, hospitalId, startTime, endTime) =>
   });
 };
 
-// -------------------------
-// Revenue Calculations
-// -------------------------
-
 export const calculateRevenueSharing = (consultationFee) => {
   const doctorShare = consultationFee * 0.6;
   const hospitalShare = consultationFee * 0.4;
@@ -146,17 +150,41 @@ export const calculateRevenueSharing = (consultationFee) => {
 
 export const getRevenueByHospital = (hospitalId) => {
   const appointments = getAppointmentsByHospital(hospitalId);
-  return appointments.reduce((total, appt) => total + (appt.consultationFee || 0), 0);
+  return appointments.reduce((total, appt) => {
+    const { hospitalShare } = calculateRevenueSharing(appt.consultationFee || 0);
+    return total + hospitalShare;
+  }, 0);
 };
 
 export const getRevenueByDoctor = (doctorId) => {
   const appointments = getAppointmentsByDoctor(doctorId);
-  return appointments.reduce((total, appt) => total + (appt.consultationFee || 0), 0);
+  return appointments.reduce((total, appt) => {
+    const { doctorShare } = calculateRevenueSharing(appt.consultationFee || 0);
+    return total + doctorShare;
+  }, 0);
 };
 
 export const getRevenueByDepartment = (hospitalId, departmentId) => {
   const appointments = getAppointmentsByHospital(hospitalId);
   // Filter appointments by department
   const filtered = appointments.filter((appt) => appt.departmentId === departmentId);
-  return filtered.reduce((total, appt) => total + (appt.consultationFee || 0), 0);
+  return filtered.reduce((total, appt) => {
+    const { hospitalShare } = calculateRevenueSharing(appt.consultationFee || 0);
+    return total + hospitalShare;
+  }, 0);
+};
+
+// Returns doctor earnings broken down by hospital
+export const getDoctorEarningsByHospital = (doctorId) => {
+  const appointments = getAppointmentsByDoctor(doctorId);
+  const earningsByHospital = {};
+  appointments.forEach((appt) => {
+    const hospitalId = appt.hospitalId;
+    const { doctorShare } = calculateRevenueSharing(appt.consultationFee || 0);
+    if (!earningsByHospital[hospitalId]) {
+      earningsByHospital[hospitalId] = 0;
+    }
+    earningsByHospital[hospitalId] += doctorShare;
+  });
+  return earningsByHospital;
 };

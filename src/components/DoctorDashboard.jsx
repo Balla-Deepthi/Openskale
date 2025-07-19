@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { getAllDoctors, getAppointmentsByDoctor, getRevenueByDoctor } from '../utils/dataUtils';
+import { getAllDoctors, getAppointmentsByDoctor, getRevenueByDoctor, getDoctorEarningsByHospital } from '../utils/dataUtils';
 
 const DoctorDashboard = () => {
   const [selectedDoctorId, setSelectedDoctorId] = useState('');
   const [appointments, setAppointments] = useState([]);
   const [totalEarnings, setTotalEarnings] = useState(0);
+  const [earningsByHospital, setEarningsByHospital] = useState({});
 
   useEffect(() => {
     if (selectedDoctorId) {
       setAppointments(getAppointmentsByDoctor(selectedDoctorId));
       setTotalEarnings(getRevenueByDoctor(selectedDoctorId));
+      setEarningsByHospital(getDoctorEarningsByHospital(selectedDoctorId));
     } else {
       setAppointments([]);
       setTotalEarnings(0);
+      setEarningsByHospital({});
     }
   }, [selectedDoctorId]);
 
@@ -32,6 +35,14 @@ const DoctorDashboard = () => {
         <>
           <h3>Total Earnings: ₹{totalEarnings}</h3>
           <h3>Total Consultations: {appointments.length}</h3>
+          <h4>Earnings by Hospital</h4>
+          <ul>
+            {Object.entries(earningsByHospital).map(([hospitalId, earnings]) => (
+              <li key={hospitalId}>
+                Hospital ID: {hospitalId} - Earnings: ₹{earnings.toFixed(2)}
+              </li>
+            ))}
+          </ul>
           <h4>Consultations Details</h4>
           <ul>
             {appointments.map((appt) => (

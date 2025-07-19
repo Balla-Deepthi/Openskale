@@ -51,9 +51,7 @@ export const getDepartmentsFromStorage = () => {
 // ✅ Doctor Utils (if needed)
 // -------------------------
 
-export const saveDoctorToStorage = (doctor) => {
-  const doctors = getFromStorage("doctors");
-  doctors.push(doctor);
+export const saveDoctorToStorage = (doctors) => {
   saveToStorage("doctors", doctors);
 };
 

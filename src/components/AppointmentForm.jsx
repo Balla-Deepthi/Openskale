@@ -5,6 +5,7 @@ import {
   getAppointmentsByDoctor,
   addAppointment,
   getDepartmentsByHospital,
+  calculateRevenueSharing,
 } from '../utils/dataUtils';
 
 const AppointmentForm = () => {
@@ -28,6 +29,7 @@ const AppointmentForm = () => {
   }, []);
 
   useEffect(() => {
+    console.log('Filtering doctors for hospital:', selectedHospital, 'specialization:', selectedSpecialization);
     if (selectedHospital && selectedSpecialization) {
       const filtered = doctors.filter((doc) =>
         doc.associations &&
@@ -37,6 +39,7 @@ const AppointmentForm = () => {
             doc.specializations.includes(selectedSpecialization)
         )
       );
+      console.log('Filtered doctors:', filtered);
       setFilteredDoctors(filtered);
     } else {
       setFilteredDoctors([]);
@@ -60,6 +63,7 @@ const AppointmentForm = () => {
       const available = assoc.availability.filter(
         (slot) => !bookedSlots.includes(slot.startTime)
       );
+      console.log('Available slots:', available);
       setAvailableSlots(available);
       setConsultationFee(assoc.consultationFee);
     } else {
@@ -74,8 +78,12 @@ const AppointmentForm = () => {
     if (!patientName || !patientGender || !patientDob || !patientIdNumber) {
       return alert('Please fill all patient details');
     }
-    if (!selectedDoctor || !selectedSlot) {
-      return alert('Please select doctor and time slot');
+    // Only require doctor and time slot if the dropdowns are visible (i.e., arrays not empty)
+    if (filteredDoctors.length > 0 && !selectedDoctor) {
+      return alert('Please select a doctor');
+    }
+    if (availableSlots.length > 0 && !selectedSlot) {
+      return alert('Please select a time slot');
     }
     // Save patient
     const patient = {
@@ -90,6 +98,8 @@ const AppointmentForm = () => {
     // But since we don't have that, we simulate with localStorageUtils
     // For now, we skip patient storage and use patientIdNumber as patientId
 
+    const { doctorShare, hospitalShare } = calculateRevenueSharing(consultationFee);
+
     const appointment = {
       doctorId: selectedDoctor,
       hospitalId: selectedHospital,
@@ -97,7 +107,10 @@ const AppointmentForm = () => {
       startTime: selectedSlot.startTime,
       endTime: selectedSlot.endTime,
       consultationFee,
+      doctorShare,
+      hospitalShare,
     };
+    console.log('Saving appointment:', appointment);
     addAppointment(appointment);
     alert('Appointment booked successfully');
     // Reset form
@@ -177,8 +190,10 @@ const AppointmentForm = () => {
         )}
 
         {availableSlots.length > 0 && (
-          <select value={selectedSlot} onChange={(e) => {
+          <select value={selectedSlot ? selectedSlot.startTime : ''} onChange={(e) => {
+            console.log('Selected time slot value:', e.target.value);
             const slot = availableSlots.find(s => s.startTime === e.target.value);
+            console.log('Found slot object:', slot);
             setSelectedSlot(slot);
           }} required>
             <option value="">Select Time Slot</option>
@@ -198,4 +213,4 @@ const AppointmentForm = () => {
   );
 };
 
-export default AppointmentForm;
+export default AppointmentForm
