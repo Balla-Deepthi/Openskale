@@ -13,16 +13,21 @@ const HospitalForm = () => {
     setHospitals(getAllHospitals());
   }, []);
 
+  const generateUniqueId = () => {
+    return '_' + Math.random().toString(36).substr(2, 9);
+  };
+
   const handleAddHospital = (e) => {
     e.preventDefault();
     if (!hospitalName || !hospitalLocation) return alert('Please enter hospital name and location');
-    const hospital = addHospital({ name: hospitalName, location: hospitalLocation });
+    const uniqueId = generateUniqueId();
+    const hospital = addHospital({ name: hospitalName, location: hospitalLocation, uniqueId });
     setSelectedHospitalId(hospital.id);
     setHospitalName('');
     setHospitalLocation('');
     setDepartments([]);
     setHospitals((prevHospitals) => [...prevHospitals, hospital]);
-    alert('Hospital added successfully');
+    alert(`Hospital added successfully. Your unique ID is: ${uniqueId}`);
   };
 
   const handleAddDepartment = (e) => {

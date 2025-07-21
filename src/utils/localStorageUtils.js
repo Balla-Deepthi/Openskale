@@ -17,12 +17,8 @@ export const getFromStorage = (key) => {
 // ✅ Hospital Utils
 // -------------------------
 
-export const saveHospitalToStorage = (hospital) => {
-  let hospitals = getFromStorage("hospitals");
-  if (!Array.isArray(hospitals)) {
-    hospitals = [];
-  }
-  hospitals.push(hospital);
+export const saveHospitalToStorage = (hospitals) => {
+  // hospitals is expected to be an array, just save it directly
   saveToStorage("hospitals", hospitals);
 };
 

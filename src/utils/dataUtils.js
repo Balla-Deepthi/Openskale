@@ -24,6 +24,10 @@ const generateId = () => '_' + Math.random().toString(36).substr(2, 9);
 export const addHospital = (hospital) => {
   const hospitals = getHospitalsFromStorage();
   hospital.id = generateId();
+  // Add uniqueId if not present, generate one
+  if (!hospital.uniqueId) {
+    hospital.uniqueId = hospital.id;
+  }
   hospitals.push(hospital);
   saveHospitalToStorage(hospitals);
   return hospital;
